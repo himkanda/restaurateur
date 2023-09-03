@@ -14,8 +14,9 @@ try:
         # order options
         print("5. Create Order")
         print("6. Add items to Order")
-        print("7. Fetch Orders")
-        print("9. Generate Bill")
+        print("7. View Orders")
+        print("8. View items in an Order")
+        print("9. Generate Bill for an Order")
         # exit
         print("10. Exit")
 
@@ -35,6 +36,8 @@ try:
             choices.choice6()
         elif choice == 7:
             choices.choice7()
+        elif choice == 8:
+            choices.choice8()
         elif choice == 9:
             choices.choice9()
         elif choice == 10:

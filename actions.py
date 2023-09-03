@@ -12,7 +12,7 @@ def view_menu():
 
 # Function to get single menu item by id
 def get_menu_item_by_id(menuId):
-    query = "SELECT * FROM `menu` WHERE `id` = " + menuId
+    query = "SELECT * FROM `menu` WHERE `id` = " + str(menuId)
     cursor.execute(query)
     menu_item = cursor.fetchall()
     return menu_item
@@ -62,8 +62,9 @@ def delete_menu_item(menuId):
 
 # Function to create a new order
 def create_order(custName, phone, email, orderType, reference):
+    updatedName = commonMethods.pascal_case(custName)
     query1 = "INSERT INTO `orders` (`customer_name`, `phone`, `email`, `order_type`, `reference`) VALUES (%s, %s, %s, %s, %s)"
-    cursor.execute(query1, (custName, phone, email, orderType, reference))
+    cursor.execute(query1, (updatedName, phone, email, orderType, reference))
     db.commit()
     print("INFO -> The order ID is created successfully!")
     query2 = "SELECT id FROM `orders` ORDER BY id DESC LIMIT 1;"
@@ -85,8 +86,56 @@ def add_items_to_order(orderId, items, quantities):
     print("INFO -> Successfully added all items in order " + orderId)
 
 
-# Function to fetch all orders or fetch filtered orders
-def fetch_orders(orderStatus, orderType, orderDate):
+# Function to fetch an order from order id
+def fetch_order(orderId):
+    cursor.execute("SELECT * FROM `orders` WHERE id = %s", (orderId,))
+    order = cursor.fetchall()
+    return order
+
+
+# Function to get all items of an order
+def fetch_items_from_order(orderId, showAmount):
+    cursor.execute(
+        "SELECT `menu_id`,`quantity` from `order_items` WHERE `order_id` = "
+        + str(orderId)
+    )
+    order = cursor.fetchall()
+    result = commonMethods.aggregate_orders(order)
+    result2 = []
+    for id, quantity in result:
+        cursor.execute("SELECT `name`, `price` FROM `menu` WHERE id = %s", (id,))
+        # Fetch the name from the result set
+        menu_result = cursor.fetchone()
+        name = menu_result[0]
+        price = float(menu_result[1])
+        amount = float(quantity) * price
+        if showAmount == True:
+            result2.append((name, price, quantity, amount))
+        else:
+            result2.append((name, price, quantity))
+
+    return result2
+
+
+def get_bill_by_id(orderId):
+    cursor.execute("SELECT `id` from bill WHERE `order_id` = " + str(orderId))
+    bill_id = cursor.fetchall()
+    return bill_id
+
+
+def add_bill(orderId, amount):
+    bill_id = get_bill_by_id(orderId)
+    if bill_id:
+        print("bill already generated!")
+    else:
+        query = "INSERT INTO bill (`order_id`, `total_amount`) VALUES (%s, %s);"
+        cursor.execute(query, (orderId, amount))
+        db.commit()
+        print("bill generated successfully!")
+
+
+# Function to get all orders or get filtered orders
+def fetch_orders_filtered(orderStatus, orderType, orderDate, print):
     query1 = "SELECT * FROM `orders`"
     match orderStatus:
         case "1":
@@ -124,22 +173,23 @@ def fetch_orders(orderStatus, orderType, orderDate):
 
     query2 = " WHERE " + statusQuery + " AND " + typeQuery + " AND " + dateQuery
     query = query1 + query2
-    print(query)
+    # print(query)
     cursor.execute(query)
     orders = cursor.fetchall()
-    commonMethods.create_table(
-        "ORDERS",
-        [
+    if print == "print":
+        commonMethods.create_table(
+            "ORDERS",
             [
-                "ID",
-                "Customer Name",
-                "Phone",
-                "Email",
-                "Order Date",
-                "Order Type",
-                "Reference ID",
-            ]
-        ],
-        orders,
-    )
-    return orders
+                [
+                    "ID",
+                    "Customer Name",
+                    "Phone",
+                    "Email",
+                    "Order Date",
+                    "Order Type",
+                    "Reference ID",
+                ]
+            ],
+            orders,
+        )
+        return orders
