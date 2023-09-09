@@ -43,7 +43,6 @@ def create_table(tableName: str, header, data):
 def return_if_incorrect_input(input, validity):
     # for list of tuple of elements
     if (type(validity) == list) and (type(validity[0]) == tuple):
-        print("cndition 1")
         num_found = False
         # Iterate through the list of tuples
         for tup in validity:

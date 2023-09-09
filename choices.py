@@ -147,7 +147,6 @@ def choice8():
         return
     # return "Menu Item","Price","Quantity"
     orders = actions.fetch_items_from_order(orderId, showAmount=False)
-    print(orders)
     fn.create_table("Order Items", [["Menu Item", "Price", "Quantity"]], orders)
 
 
@@ -179,7 +178,6 @@ def choice9():
     subtotal = fn.calculate_final_bill(order_items_data)
     tax = subtotal * 0.08  # 8% tax is added
     total = subtotal + tax
-    print(order_data_final, order_items_data_final)
     order_items_data_final.append(
         [
             "Subtotal",
